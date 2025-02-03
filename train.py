@@ -6,6 +6,10 @@ from trex import TRexRunner
 import random
 import numpy as np
 import os
+import logging
+
+# 配置日志
+logging.basicConfig(filename='training.log', level=logging.INFO, format='%(asctime)s - %(message)s')
 
 # 超参数
 GAMMA = 0.99
@@ -103,6 +107,8 @@ def train():
 
             if steps_done % TARGET_UPDATE == 0:
                 target_net.load_state_dict(policy_net.state_dict())
+
+        logging.info(f"Episode {episode}, Total Reward: {total_reward}, Epsilon: {epsilon:.4f}, Steps: {steps_done}")
 
         print(f"Episode {episode}, Total Reward: {total_reward}")
         
