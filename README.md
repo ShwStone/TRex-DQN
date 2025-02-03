@@ -1,8 +1,4 @@
-# T-Rex Runner Pygame
-
-<p align="center">
-   <img src="./images/demo.gif" width="700px">
-</p>
+# T-Rex Game with DQN
 
 ## Install dependencies
 
@@ -10,8 +6,16 @@
 pip install -r requirements.txt
 ```
 
-## Play
+## Train
 
 ```bash
-python main.py
+python train.py
 ```
+
+The model file is output in `models/`.
+
+The play record is output in `record/`.
+
+## Thanks
+
+The game part is based on this project: [SigureMo/T-Rex-runner-pygame: :t-rex: T-rex running implemented with pygame](https://github.com/SigureMo/T-Rex-runner-pygame/tree/main).
