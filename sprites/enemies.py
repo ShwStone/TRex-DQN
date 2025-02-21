@@ -2,7 +2,7 @@ import random
 
 import pygame
 
-from events import ADD_ENEMY
+from events import ADD_ENEMY, KILL_ENEMY
 from speed import Speed
 from sprites.base import SpriteBase
 
@@ -27,6 +27,8 @@ class Cactus(SpriteBase):
 
         if self.pos_x >= w_screen + w_image:
             self.kill()
+            pygame.event.post(pygame.event.Event(KILL_ENEMY))
+
         self.x = -self.pos_x + w_screen
         self.y = h_screen - h_image
         self.render(screen)
@@ -61,5 +63,7 @@ class Pterodactyl(SpriteBase):
 
         if self.pos_x >= w_screen + w_image:
             self.kill()
+            pygame.event.post(pygame.event.Event(KILL_ENEMY))
+
         self.x = -self.pos_x + w_screen
         self.render(screen)

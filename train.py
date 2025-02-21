@@ -49,12 +49,11 @@ class ReplayBuffer:
     def __len__(self):
         return len(self.buffer)
 
-def train():
+def train(env):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # device = "cpu"
     print(device)
-    env = TRexRunner()
-    input_shape = (1, 4, 350, 1000)
+    input_shape = (1, 4, 88, 250)
     num_actions = 3
 
     policy_net = DinoDQN(input_shape, num_actions).to(device)
@@ -76,6 +75,7 @@ def train():
 
     for episode in range(EPISODE_RECOVER, EPISODE):
         state = env.begin()
+
         total_reward = 0
         record = episode % RECORD_INTERVAL == 0
 
@@ -127,16 +127,14 @@ def train():
         if episode % SAVE_INTERVAL == 0:
             policy_net.save(f"./models/policy_net_{episode}.pth")
             target_net.save(f"./models/target_net_{episode}.pth")
+            test_dqn(env, episode)
 
         if env.over:
             break
 
-    env.close()
-
-def test_dqn(episode_to_test):
+def test_dqn(env, episode_to_test):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    env = TRexRunner()
-    input_shape = (1, 4, 350, 1000)
+    input_shape = (1, 4, 88, 250)
     num_actions = 3
 
     policy_net = DinoDQN(input_shape, num_actions).to(device)
@@ -158,8 +156,8 @@ def test_dqn(episode_to_test):
             break
 
     logging.info(f"Test Episode {episode_to_test}, Total Reward: {total_reward}")
-    env.close()
 
 if __name__ == "__main__":
-    train()
-    # test_dqn(2600)
+    env = TRexRunner()
+    train(env)
+    env.close()

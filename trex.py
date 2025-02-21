@@ -5,9 +5,9 @@ import time
 import pygame
 
 from backgroud import Cloud, Desert, Score
-from events import ADD_ENEMY
+from events import ADD_ENEMY, KILL_ENEMY
 from sprites.enemies import Pterodactyl, Cactus
-from sprites.player import TRex
+from sprites.player import TRex, TRexStatus
 from sprites.collision import detect_collision_by_alpha_channel
 from speed import Speed, SpeedRatio
 from gameover import GameOver
@@ -85,19 +85,24 @@ class TRexRunner :
         return self.get_frame(0)
     
     def step(self, action, record=False, record_path=None):
+        self.kill_an_enemy = False
         state = self.get_frame(action, record, record_path)
-        reward = -10 if self.gameover.is_gameover else 0.1
+        reward = (
+            -10 if self.gameover.is_gameover else 
+            0.1 if self.kill_an_enemy else 
+            0.01 if self.t_rex.status == TRexStatus.RUNNING else 
+            0
+        )
         done = self.gameover.is_gameover
         return state, reward, done
 
     def get_frame(self, action, record=False, record_path=None):
-        for i in range(4) :
-            state = self._step(action)
-            if record :
-                self.record_frames.append(state)
-
-            if self.gameover.is_gameover :
-                break
+        state = self._step(action)
+        if record :
+            self.record_frames.append(state)
+        
+        state = state.resize((250, 88))
+        state = (np.array(state) < 128)
 
         if len(self.cache) == 0 :
             self.cache = [state] * self.frames
@@ -106,8 +111,7 @@ class TRexRunner :
             self.cache.append(state)
 
         if record and self.gameover.is_gameover :
-                frames = [Image.fromarray(frame) for frame in self.record_frames]
-                frames[0].save(record_path, save_all=True, append_images=frames[1:], duration=20, loop=0)
+                self.record_frames[0].save(record_path, save_all=True, append_images=self.record_frames[1:], duration=20, loop=0)
                 self.record_frames = []
 
         return np.array(self.cache)
@@ -120,11 +124,13 @@ class TRexRunner :
             elif event.type == pygame.QUIT:
                 self.over = True
             elif event.type == ADD_ENEMY:
-                if self.score.value > 100 and random.random() < 0.2:
+                if random.random() < 0.3:
                     self.enemies.add(Pterodactyl(self.pterodactyl_images, speed=self.background_speed))
                 else:
                     cactus_image = random.choice(self.cactus_images)
                     self.enemies.add(Cactus(cactus_image, speed=self.background_speed))
+            elif event.type == KILL_ENEMY:
+                self.kill_an_enemy = True
 
         if self.gameover.is_gameover:
             # 开始新游戏
@@ -164,7 +170,7 @@ class TRexRunner :
 
         state = pygame.image.tobytes(self.screen, 'RGB')
         state = Image.frombytes('RGB', self.screen.get_size(), state).convert('L')
-        return np.array(state)
+        return state
     
     def play(self):
         while not self.over:
