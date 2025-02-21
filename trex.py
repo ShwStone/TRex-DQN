@@ -89,7 +89,7 @@ class TRexRunner :
         state = self.get_frame(action, record, record_path)
         reward = (
             -10 if self.gameover.is_gameover else 
-            0.1 if self.kill_an_enemy else 
+            1 if self.kill_an_enemy else 
             0.01 if self.t_rex.status == TRexStatus.RUNNING else 
             0
         )

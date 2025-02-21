@@ -14,8 +14,8 @@ logging.basicConfig(filename='training.log', level=logging.INFO, format='%(ascti
 # 超参数
 GAMMA = 0.99
 EPSILON_START = 1
-EPSILON_END = 0.1
-EPSILON_DECAY = 100000
+EPSILON_END = 0.03
+EPSILON_DECAY = 500000
 LEARNING_RATE = 1e-4
 BATCH_SIZE = 32
 BUFFER_SIZE = 32767
