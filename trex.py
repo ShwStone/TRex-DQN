@@ -91,16 +91,21 @@ class TRexRunner :
         return state, reward, done
 
     def get_frame(self, action, record=False, record_path=None):
-        state = self._step(action)
+        for i in range(4) :
+            state = self._step(action)
+            if record :
+                self.record_frames.append(state)
+
+            if self.gameover.is_gameover :
+                break
+
         if len(self.cache) == 0 :
             self.cache = [state] * self.frames
         else :
             self.cache.pop(0)
             self.cache.append(state)
 
-        if record :
-            self.record_frames.append(state)
-            if self.gameover.is_gameover :
+        if record and self.gameover.is_gameover :
                 frames = [Image.fromarray(frame) for frame in self.record_frames]
                 frames[0].save(record_path, save_all=True, append_images=frames[1:], duration=20, loop=0)
                 self.record_frames = []
