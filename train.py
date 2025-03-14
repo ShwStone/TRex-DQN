@@ -13,19 +13,18 @@ logging.basicConfig(filename='training.log', level=logging.INFO, format='%(ascti
 
 # 超参数
 GAMMA = 0.99
-EPSILON_START = 1
+EPSILON_START = 0.10
 EPSILON_END = 0.03
 EPSILON_DECAY = 500000
 LEARNING_RATE = 1e-4
 BATCH_SIZE = 32
-BUFFER_SIZE = 32767
-REMEMBER_RATE = 0.3
+BUFFER_SIZE = 8192
+REMEMBER_RATE = 0.2
 TARGET_UPDATE = 1000
 RECORD_INTERVAL = 10
-EPISODE = 10000
+EPISODE = 50000
 SAVE_INTERVAL = 100  # 每隔100个episode保存一次模型
-EPISODE_RECOVER = 0 
-STEPS_RECOVER = 0
+RECOVER = True
 
 # 确保文件夹 ./models 和 ./record 存在
 os.makedirs("./models", exist_ok=True)
@@ -53,31 +52,28 @@ def train(env):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # device = "cpu"
     print(device)
-    input_shape = (1, 4, 88, 250)
+    input_shape = (1, 4, 175, 500)
     num_actions = 3
 
     policy_net = DinoDQN(input_shape, num_actions).to(device)
     target_net = DinoDQN(input_shape, num_actions).to(device)
     
-    if EPISODE_RECOVER > 0:
-        policy_net.load_state_dict(torch.load(f"./models/policy_net_{EPISODE_RECOVER}.pth"))
-        target_net.load_state_dict(torch.load(f"./models/target_net_{EPISODE_RECOVER}.pth"))
-    else:
-        target_net.load_state_dict(policy_net.state_dict())
-    
+    if RECOVER:
+        policy_net.load_state_dict(torch.load(f"./models/latest.pth"))
+
+    target_net.load_state_dict(policy_net.state_dict())
     target_net.eval()
 
     optimizer = optim.Adam(policy_net.parameters(), lr=LEARNING_RATE)
     replay_buffer = ReplayBuffer(BUFFER_SIZE)
 
-    steps_done = STEPS_RECOVER
+    steps_done = 0
     epsilon = EPSILON_START
 
-    for episode in range(EPISODE_RECOVER, EPISODE):
+    for episode in range(EPISODE):
         state = env.begin()
 
         total_reward = 0
-        record = episode % RECORD_INTERVAL == 0
 
         while True:
             steps_done += 1
@@ -89,7 +85,7 @@ def train(env):
             else:
                 action = random.randrange(num_actions)
 
-            next_state, reward, done = env.step(action, record=record, record_path=f"./record/{episode}.gif")
+            next_state, reward, done = env.step(action)
             total_reward += reward
 
             if done or random.random() < REMEMBER_RATE:
@@ -125,8 +121,7 @@ def train(env):
         logging.info(f"Episode {episode}, Total Reward: {total_reward}, Epsilon: {epsilon:.4f}, Steps: {steps_done}")
         
         if episode % SAVE_INTERVAL == 0:
-            policy_net.save(f"./models/policy_net_{episode}.pth")
-            target_net.save(f"./models/target_net_{episode}.pth")
+            policy_net.save(f"./models/latest.pth")
             test_dqn(env, episode)
 
         if env.over:
@@ -134,11 +129,11 @@ def train(env):
 
 def test_dqn(env, episode_to_test):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    input_shape = (1, 4, 88, 250)
+    input_shape = (1, 4, 175, 500)
     num_actions = 3
 
     policy_net = DinoDQN(input_shape, num_actions).to(device)
-    policy_net.load_state_dict(torch.load(f"./models/policy_net_{episode_to_test}.pth"))
+    policy_net.load_state_dict(torch.load(f"./models/latest.pth"))
     policy_net.eval()
 
     state = env.begin()
@@ -156,6 +151,18 @@ def test_dqn(env, episode_to_test):
             break
 
     logging.info(f"Test Episode {episode_to_test}, Total Reward: {total_reward}")
+    
+    with open('./models/best_reward.log', 'r') as f:
+        best_reward = float(f.read())
+    
+    if total_reward > best_reward:
+        with open('./models/best_reward.log', 'w') as f:
+            best_reward = total_reward
+            print(total_reward, file=f)
+        policy_net.save(f"./models/best_reward.pth")
+        
+
+
 
 if __name__ == "__main__":
     env = TRexRunner()

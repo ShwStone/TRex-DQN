@@ -90,7 +90,7 @@ class TRexRunner :
         reward = (
             -10 if self.gameover.is_gameover else 
             1 if self.kill_an_enemy else 
-            0.01 if self.t_rex.status == TRexStatus.RUNNING else 
+            0.05 if self.t_rex.status == TRexStatus.RUNNING else 
             0
         )
         done = self.gameover.is_gameover
@@ -101,8 +101,9 @@ class TRexRunner :
         if record :
             self.record_frames.append(state)
         
-        state = state.resize((250, 88))
+        state = state.resize((500, 175))
         state = (np.array(state) < 128)
+        # print(state.shape)
 
         if len(self.cache) == 0 :
             self.cache = [state] * self.frames
@@ -121,10 +122,10 @@ class TRexRunner :
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.over = True
-            elif event.type == pygame.QUIT:
+            elif event.type == pygame.QUIT:        
                 self.over = True
             elif event.type == ADD_ENEMY:
-                if random.random() < 0.3:
+                if random.random() < 0.5:
                     self.enemies.add(Pterodactyl(self.pterodactyl_images, speed=self.background_speed))
                 else:
                     cactus_image = random.choice(self.cactus_images)
