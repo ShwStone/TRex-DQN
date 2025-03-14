@@ -1,5 +1,7 @@
 # T-Rex Game with DQN
 
+![](./images/best.gif)
+
 ## Install dependencies
 
 ```bash
