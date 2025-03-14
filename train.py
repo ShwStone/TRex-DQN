@@ -5,6 +5,7 @@ from model import DinoDQN
 from trex import TRexRunner
 import random
 import numpy as np
+import shutil
 import os
 import logging
 
@@ -133,7 +134,7 @@ def test_dqn(env, episode_to_test):
     num_actions = 3
 
     policy_net = DinoDQN(input_shape, num_actions).to(device)
-    policy_net.load_state_dict(torch.load(f"./models/latest.pth"))
+    policy_net.load_state_dict(torch.load("./models/latest.pth"))
     policy_net.eval()
 
     state = env.begin()
@@ -152,17 +153,18 @@ def test_dqn(env, episode_to_test):
 
     logging.info(f"Test Episode {episode_to_test}, Total Reward: {total_reward}")
     
-    with open('./models/best_reward.log', 'r') as f:
-        best_reward = float(f.read())
+    if os.path.exists('./models/best_reward.log') :
+        with open('./models/best_reward.log', 'r') as f:
+            best_reward = float(f.read())
+    else :
+        best_reward = -1e9
     
     if total_reward > best_reward:
         with open('./models/best_reward.log', 'w') as f:
             best_reward = total_reward
             print(total_reward, file=f)
-        policy_net.save(f"./models/best_reward.pth")
-        
-
-
+        shutil.copy("./models/latest.pth", "./models/best_reward.pth")
+        shutil.copy(f"./record/test_{episode_to_test}.gif", "./models/best_reward.gif")
 
 if __name__ == "__main__":
     env = TRexRunner()
