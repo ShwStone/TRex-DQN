@@ -7,6 +7,7 @@ import random
 import numpy as np
 import shutil
 import os
+import sys
 import logging
 
 # 配置日志
@@ -14,8 +15,8 @@ logging.basicConfig(filename='training.log', level=logging.INFO, format='%(ascti
 
 # 超参数
 GAMMA = 0.99
-EPSILON_START = 0.10
-EPSILON_END = 0.03
+EPSILON_START = float(sys.argv[1]) if len(sys.argv) > 1 else 1
+EPSILON_END = float(sys.argv[2]) if len(sys.argv) > 2 else 0.03
 EPSILON_DECAY = 500000
 LEARNING_RATE = 1e-4
 BATCH_SIZE = 32
