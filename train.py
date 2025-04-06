@@ -26,7 +26,7 @@ TARGET_UPDATE = 1000
 RECORD_INTERVAL = 10
 EPISODE = 50000
 SAVE_INTERVAL = 100  # 每隔100个episode保存一次模型
-RECOVER = True
+RECOVER = (sys.argv[3] == "True") if len(sys.argv) > 3 else False
 
 # 确保文件夹 ./models 和 ./record 存在
 os.makedirs("./models", exist_ok=True)
